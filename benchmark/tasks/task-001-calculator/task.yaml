@@ -1,0 +1,27 @@
+id: JFB-001
+title: Incorrect integer division
+language: java
+build_system: maven
+java_version: 17
+
+issue: >
+  Calculator.divide returns incorrect results for valid integer inputs.
+  Correct the implementation while preserving its division-by-zero behaviour.
+
+test_command: mvn test
+timeout_seconds: 120
+
+target_files:
+  - src/main/java/dev/javafixbench/Calculator.java
+
+failing_tests:
+  - CalculatorTest.dividesPositiveNumbers
+  - CalculatorTest.dividesNegativeNumbers
+
+expected_failure_count: 2
+
+tags:
+  - arithmetic
+  - logic-error
+  - single-file
+  - beginner
