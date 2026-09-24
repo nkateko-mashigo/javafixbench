@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "javafixbench"
+version = "0.1.0"
+description = "A reproducible benchmark and lightweight Gemma 4 agent for repairing Java repositories."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = "Apache-2.0"
+dependencies = [
+    "networkx",
+    "tree-sitter",
+    "tree-sitter-java",
+    "pydantic",
+    "PyYAML",
+    "typer",
+    "rich",
+    "psutil",
+    "pandas",
+    "requests"
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+javafixbench = "javafixbench.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
