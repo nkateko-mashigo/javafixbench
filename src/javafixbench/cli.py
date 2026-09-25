@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+
 import shutil
 import subprocess
 
 import typer
 from rich.console import Console
 from rich.table import Table
+from pathlib import Path
+from javafixbench.repo_graph import scan_repository
 
 app = typer.Typer(
     help="JavaFixBench: benchmark and evaluate Java repair agents.",
@@ -80,6 +83,35 @@ def doctor() -> None:
 
     console.print("\n[bold green]Environment ready.[/bold green]")
 
+@app.command()
+def scan(
+    repository: Path = typer.Argument(
+        Path("."),
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        resolve_path=True,
+        help="Java repository to scan.",
+    ),
+) -> None:
+    """Build and summarise the repository dependency graph."""
 
+    result = scan_repository(repository)
+
+    table = Table(title="Java Repository Graph")
+    table.add_column("Metric")
+    table.add_column("Value", justify="right")
+
+    table.add_row("Java files", str(result.java_file_count))
+    table.add_row("Packages", str(result.package_count))
+    table.add_row("Declared types", str(result.declared_type_count))
+    table.add_row("Import statements", str(result.import_count))
+    table.add_row("Internal dependencies", str(result.dependency_count))
+    table.add_row(
+        "External or unresolved imports",
+        str(len(result.unresolved_imports)),
+    )
+
+    console.print(table)
 if __name__ == "__main__":
     app()
