@@ -10,6 +10,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 
 from javafixbench.agent import run_repair_agent
+from javafixbench.reporting import save_run_result
 from javafixbench.repo_graph import scan_repository
 from javafixbench.runner import parse_test_summary, run_maven_tests
 
@@ -203,6 +204,7 @@ def repair(
     )
 
     result = run_repair_agent(task)
+    result_file = save_run_result(result)
 
     table = Table(title="JavaFixBench Repair Result")
     table.add_column("Metric")
@@ -216,6 +218,7 @@ def repair(
     )
     table.add_row("Task", result.task_id)
     table.add_row("Model", result.model)
+    table.add_row("Result file", str(result_file))
     table.add_row(
         "Selected files",
         str(len(result.selected_files)),
