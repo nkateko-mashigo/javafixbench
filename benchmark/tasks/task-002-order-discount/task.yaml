@@ -1,0 +1,28 @@
+id: JFB-002
+title: Incorrect loyalty discount calculation
+language: java
+build_system: maven
+java_version: 17
+
+issue: >
+  OrderService calculates incorrect totals for qualifying loyalty
+  customers. Correct the implementation while preserving totals for
+  non-members and orders below the qualifying threshold.
+
+test_command: mvn test
+timeout_seconds: 120
+
+target_files:
+  - src/main/java/dev/javafixbench/pricing/DiscountPolicy.java
+
+failing_tests:
+  - OrderServiceTest.appliesLoyaltyDiscountAboveThreshold
+  - OrderServiceTest.appliesLoyaltyDiscountAtThreshold
+
+expected_failure_count: 2
+
+tags:
+  - business-logic
+  - dependency-graph
+  - multi-file
+  - boundary-condition
