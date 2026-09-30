@@ -1,0 +1,29 @@
+id: JFB-003
+title: Missing items in paginated results
+language: java
+build_system: maven
+java_version: 17
+
+issue: >
+  PaginationService sometimes returns incomplete pages from a list.
+  Correct the implementation while preserving partial final pages,
+  empty results for pages beyond the list, and input validation.
+
+test_command: mvn test
+timeout_seconds: 120
+
+target_files:
+  - src/main/java/dev/javafixbench/pagination/bounds/PageBounds.java
+
+failing_tests:
+  - PaginationServiceTest.firstPageContainsAllRequestedItems
+  - PaginationServiceTest.middlePageContainsAllRequestedItems
+  - PaginationServiceTest.exactFinalPageContainsAllRemainingItems
+
+expected_failure_count: 3
+
+tags:
+  - off-by-one
+  - pagination
+  - dependency-graph
+  - boundary-condition
