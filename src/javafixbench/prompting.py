@@ -19,6 +19,13 @@ Rules:
 3. Do not add unrelated features.
 4. Return complete replacement contents for changed files only.
 5. Return no commentary outside the required repair format.
+6. Use the issue, selected tests, and expected-versus-actual failure
+   values to infer the required behavior. Existing constants and logic
+   may be incorrect.
+7. Trace each failing assertion through the selected dependencies to
+   locate the implementation error before choosing the smallest fix.
+8. Each returned file must contain an actual source-code change from
+   the supplied original. Returning unchanged code is not a repair.
 
 Required response format:
 

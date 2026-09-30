@@ -186,7 +186,13 @@ def run_repair_agent(
             )
 
         changed_files = tuple(
-            change.path for change in changes
+            change.path
+            for change in changes
+            if original_contents[change.path].splitlines()
+            != (workspace / change.path).read_text(
+                encoding="utf-8",
+                errors="replace",
+            ).splitlines()
         )
 
         difference = _create_diff(
