@@ -1,0 +1,31 @@
+id: JFB-005
+title: Catalog snapshots expose mutable internal state
+language: java
+build_system: maven
+java_version: 17
+
+issue: >
+  Changing a list returned by CatalogService.items() unexpectedly changes
+  the stored catalog. Returned lists must be independently mutable
+  snapshots. Preserve replacement behavior, insertion order, duplicate
+  items, and input validation.
+
+test_command: mvn test
+timeout_seconds: 120
+
+target_files:
+  - src/main/java/dev/javafixbench/catalog/api/CatalogService.java
+
+failing_tests:
+  - CatalogServiceTest.clearingSnapshotDoesNotChangeCatalog
+  - CatalogServiceTest.addingToSnapshotDoesNotChangeCatalog
+  - CatalogServiceTest.reorderingSnapshotDoesNotChangeCatalog
+
+expected_failure_count: 3
+
+tags:
+  - defensive-copy
+  - mutable-state
+  - dependency-graph
+  - multi-file
+  - context-selection

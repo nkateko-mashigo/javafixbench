@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -47,6 +48,65 @@ class RepairContext:
 
 def _normalise_path(value: str) -> str:
     return value.replace("\\", "/")
+
+
+def _compact_feedback(test_output: str) -> str:
+    maximum_characters = 2_000
+    cleaned = re.sub(
+        r"\x1b\[[0-?]*[ -/]*[@-~]",
+        "",
+        test_output,
+    ).strip()
+
+    if not cleaned:
+        return "(No compiler or test feedback was provided.)"
+
+    lines = [line.strip() for line in cleaned.splitlines()]
+    test_summaries: list[str] = []
+    failure_summaries: list[str] = []
+
+    for line in lines:
+        match = re.search(
+            r"Tests run:\s*\d+,\s*Failures:\s*\d+,"
+            r"\s*Errors:\s*\d+,\s*Skipped:\s*\d+",
+            line,
+        )
+
+        if match:
+            test_summaries.append(match.group(0))
+
+        if re.match(r"^\[ERROR\]\s+\S+:\d+\s+\S", line):
+            failure_summaries.append(line)
+
+    summary = test_summaries[-1:] if test_summaries else []
+
+    if failure_summaries:
+        selected = summary + failure_summaries
+    else:
+        errors = [
+            line for line in lines
+            if line.startswith("[ERROR]")
+        ]
+        exceptions = [
+            line for line in lines
+            if re.match(r"^(Caused by:|\S+(Exception|Error):)", line)
+        ]
+        selected = summary + errors + exceptions if errors else []
+
+    feedback = (
+        "\n".join(dict.fromkeys(selected))
+        if selected
+        else cleaned[-maximum_characters:]
+    )
+
+    if len(feedback) > maximum_characters:
+        marker = "\n[Compiler/test feedback truncated]"
+        feedback = (
+            feedback[:maximum_characters - len(marker)].rstrip()
+            + marker
+        )
+
+    return feedback
 
 
 def _select_relevant_files(
@@ -167,10 +227,7 @@ def build_repair_context(
         else "(No internal import edges detected.)"
     )
 
-    feedback = test_output[-6_000:].strip()
-
-    if not feedback:
-        feedback = "(No compiler or test feedback was provided.)"
+    feedback = _compact_feedback(test_output)
 
     prompt = f"""
 REPAIR TASK
