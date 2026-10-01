@@ -19,6 +19,9 @@ class GenerationResult:
     prompt_tokens: int
     output_tokens: int
     duration_seconds: float
+    done: bool | None = None
+    done_reason: str | None = None
+    requested_settings: dict[str, object] | None = None
 
 
 class OllamaClient:
@@ -71,17 +74,19 @@ class OllamaClient:
         max_tokens: int = 768,
         seed: int = 42,
     ) -> GenerationResult:
+        options: dict[str, object] = {
+            "temperature": temperature,
+            "num_ctx": context_size,
+            "num_predict": max_tokens,
+            "seed": seed,
+        }
+
         payload: dict[str, object] = {
             "model": self.model,
             "prompt": prompt,
             "stream": False,
             "think": False,
-            "options": {
-                "temperature": temperature,
-                "num_ctx": context_size,
-                "num_predict": max_tokens,
-                "seed": seed,
-            },
+            "options": options,
         }
 
         if system:
@@ -108,4 +113,11 @@ class OllamaClient:
             duration_seconds=(
                 int(data.get("total_duration", 0)) / 1_000_000_000
             ),
+            done=data.get("done"),
+            done_reason=data.get("done_reason"),
+            requested_settings={
+                "endpoint": "/api/generate",
+                "think": payload["think"],
+                "options": options.copy(),
+            },
         )

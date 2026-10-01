@@ -38,7 +38,7 @@ def build_run_record(
     generation = result.generation
 
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "recorded_at_utc": datetime.now(
             timezone.utc
         ).isoformat(),
@@ -54,6 +54,9 @@ def build_run_record(
                 "output_tokens": generation.output_tokens,
                 "duration_seconds": generation.duration_seconds,
                 "response": generation.text,
+                "done": generation.done,
+                "done_reason": generation.done_reason,
+                "requested_settings": generation.requested_settings,
             }
             if generation is not None
             else None
