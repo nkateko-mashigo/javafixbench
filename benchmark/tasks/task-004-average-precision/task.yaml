@@ -1,0 +1,30 @@
+id: JFB-004
+title: Loss of precision in average calculation
+language: java
+build_system: maven
+java_version: 17
+
+issue: >
+  StatisticsService returns incorrect averages when the mathematical
+  result contains a fractional part. Correct the implementation while
+  preserving whole-number results, input validation, and correct
+  handling of large integer values.
+
+test_command: mvn test
+timeout_seconds: 120
+
+target_files:
+  - src/main/java/dev/javafixbench/statistics/calculation/MeanCalculator.java
+
+failing_tests:
+  - StatisticsServiceTest.averagePreservesPositiveFraction
+  - StatisticsServiceTest.averagePreservesNegativeFraction
+  - StatisticsServiceTest.averagePreservesFractionAcrossZero
+
+expected_failure_count: 3
+
+tags:
+  - integer-arithmetic
+  - numeric-precision
+  - dependency-graph
+  - boundary-condition
