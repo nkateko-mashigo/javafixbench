@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 
 import yaml
@@ -36,6 +37,11 @@ COMPLETE FILE CONTENT
 </file>
 </repair>
 """.strip()
+
+
+class SelectionStrategy(str, Enum):
+    GRAPH_GUIDED = "graph_guided"
+    FILE_ORDER = "file_order"
 
 
 @dataclass(frozen=True)
@@ -113,7 +119,9 @@ def _select_relevant_files(
     repository: Path,
     targets: list[str],
     maximum_files: int,
+    strategy: SelectionStrategy | str = SelectionStrategy.GRAPH_GUIDED,
 ) -> tuple[list[str], object]:
+    selected_strategy = SelectionStrategy(strategy)
     scan = scan_repository(repository)
     available = {
         source.relative_path: source
@@ -135,20 +143,23 @@ def _select_relevant_files(
     for target in targets:
         add(target)
 
-    for target in list(selected):
-        neighbours = set(scan.graph.successors(target))
-        neighbours.update(scan.graph.predecessors(target))
+    if selected_strategy == SelectionStrategy.GRAPH_GUIDED:
+        for target in list(selected):
+            neighbours = set(scan.graph.successors(target))
+            neighbours.update(scan.graph.predecessors(target))
 
-        for neighbour in sorted(neighbours):
-            add(neighbour)
+            for neighbour in sorted(neighbours):
+                add(neighbour)
 
-    remaining = sorted(
-        available,
-        key=lambda path: (
-            -scan.graph.degree(path),
-            path,
-        ),
-    )
+        remaining = sorted(
+            available,
+            key=lambda path: (
+                -scan.graph.degree(path),
+                path,
+            ),
+        )
+    else:
+        remaining = sorted(available)
 
     for path in remaining:
         add(path)
@@ -162,6 +173,7 @@ def build_repair_context(
     *,
     maximum_files: int = 8,
     maximum_source_characters: int = 9_000,
+    strategy: SelectionStrategy | str = SelectionStrategy.GRAPH_GUIDED,
 ) -> RepairContext:
     repository = Path(task_directory).resolve()
     metadata_path = repository / "task.yaml"
@@ -185,6 +197,7 @@ def build_repair_context(
         repository,
         targets,
         maximum_files,
+        strategy=strategy,
     )
 
     remaining_characters = maximum_source_characters

@@ -10,6 +10,7 @@ from rich.syntax import Syntax
 from rich.table import Table
 
 from javafixbench.agent import run_repair_agent
+from javafixbench.prompting import SelectionStrategy
 from javafixbench.reporting import save_run_result
 from javafixbench.repo_graph import scan_repository
 from javafixbench.runner import parse_test_summary, run_maven_tests
@@ -195,6 +196,11 @@ def repair(
         resolve_path=True,
         help="Path to the Java benchmark task.",
     ),
+    strategy: SelectionStrategy = typer.Option(
+        SelectionStrategy.GRAPH_GUIDED,
+        "--strategy",
+        help="File selection strategy: graph_guided or file_order.",
+    ),
 ) -> None:
     """Run the Gemma 4 repair agent on a Java task."""
 
@@ -203,7 +209,7 @@ def repair(
         "[yellow]Gemma 4 may take several minutes on this PC.[/yellow]\n"
     )
 
-    result = run_repair_agent(task)
+    result = run_repair_agent(task, strategy=strategy)
     result_file = save_run_result(result)
 
     table = Table(title="JavaFixBench Repair Result")
@@ -218,6 +224,7 @@ def repair(
     )
     table.add_row("Task", result.task_id)
     table.add_row("Model", result.model)
+    table.add_row("Strategy", result.strategy)
     table.add_row("Result file", str(result_file))
     table.add_row(
         "Selected files",

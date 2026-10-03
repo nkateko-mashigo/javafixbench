@@ -17,7 +17,10 @@ from javafixbench.patching import (
     apply_repair_changes,
     parse_repair_response,
 )
-from javafixbench.prompting import build_repair_context
+from javafixbench.prompting import (
+    SelectionStrategy,
+    build_repair_context,
+)
 from javafixbench.runner import CommandResult, run_maven_tests
 
 
@@ -34,6 +37,7 @@ class AgentRunResult:
     generation: GenerationResult | None
     diff: str
     error: str | None = None
+    strategy: str = "graph_guided_single_pass"
 
 
 def _load_task_id(task_directory: Path) -> str:
@@ -83,7 +87,10 @@ def run_repair_agent(
     *,
     client: OllamaClient | None = None,
     test_timeout_seconds: int = 120,
+    strategy: SelectionStrategy | str = SelectionStrategy.GRAPH_GUIDED,
 ) -> AgentRunResult:
+    selected_strategy = SelectionStrategy(strategy)
+    strategy_name = f"{selected_strategy.value}_single_pass"
     source_task = Path(task_directory).resolve()
 
     if not source_task.is_dir():
@@ -134,11 +141,13 @@ def run_repair_agent(
                 error=(
                     "The benchmark already passes before repair."
                 ),
+                strategy=strategy_name,
             )
 
         context = build_repair_context(
             workspace,
             baseline.combined_output,
+            strategy=selected_strategy,
         )
 
         original_contents = {
@@ -183,6 +192,7 @@ def run_repair_agent(
                 generation=generation,
                 diff="",
                 error=str(error),
+                strategy=strategy_name,
             )
 
         changed_files = tuple(
@@ -220,4 +230,5 @@ def run_repair_agent(
             error=None if final.passed else (
                 "The generated repair did not pass all tests."
             ),
+            strategy=strategy_name,
         )

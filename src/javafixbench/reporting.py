@@ -33,7 +33,7 @@ def _command_record(
 def build_run_record(
     result: AgentRunResult,
     *,
-    strategy: str = "graph_guided_single_pass",
+    strategy: str | None = None,
 ) -> dict[str, Any]:
     generation = result.generation
 
@@ -44,7 +44,7 @@ def build_run_record(
         ).isoformat(),
         "task_id": result.task_id,
         "model": result.model,
-        "strategy": strategy,
+        "strategy": result.strategy if strategy is None else strategy,
         "success": result.success,
         "selected_files": list(result.selected_files),
         "changed_files": list(result.changed_files),
@@ -72,7 +72,7 @@ def save_run_result(
     result: AgentRunResult,
     output_directory: str | Path = "experiments/results",
     *,
-    strategy: str = "graph_guided_single_pass",
+    strategy: str | None = None,
 ) -> Path:
     destination = Path(output_directory)
     destination.mkdir(parents=True, exist_ok=True)
